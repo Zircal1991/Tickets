@@ -57,6 +57,8 @@ namespace Tickets
                 if(test.Count!=0)
                 {
                     Console.WriteLine("get one house!");
+
+
                 }
 
 
