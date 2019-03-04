@@ -52,15 +52,9 @@ namespace Tickets
                     }
                 }
 
-                var test = roomList.Select(x => x.Status.Equals("04")).ToList();
+                var test = roomList.Select(x => x.Status.Equals("02")).ToList();
 
-                if(test.Count!=0)
-                {
-                    Console.WriteLine("get one house!");
-
-
-                }
-
+                Console.WriteLine(test.Count);
 
             }
                 Console.ReadLine();
