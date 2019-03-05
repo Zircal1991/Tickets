@@ -16,18 +16,48 @@ namespace Tickets
     {
         private const string V = "buildingCode";
 
+        private static  Dictionary<string,string> BuildingName = new Dictionary<string, string>()
+            {
+                {"0011449816806945psc","01"},
+                {"0011449816830250MuI","02"},
+                {"0011449816876736sfx","综合楼东"},
+                {"0011449816949458BXk","综合楼西"}
+            };
+
         static void Main(string[] args)
         {
-
             var userConfig = InitConfig();
 
+            var backgroundTasks = new []
+            {
+                Task.Run(()=>CheckHouse("0011449816806945psc",userConfig.Account,userConfig.PWD)),
+                Task.Run(()=>CheckHouse("0011449816830250MuI",userConfig.Account,userConfig.PWD)),
+                Task.Run(()=>CheckHouse("0011449816876736sfx",userConfig.Account,userConfig.PWD)),
+                Task.Run(()=>CheckHouse("0011449816949458BXk",userConfig.Account,userConfig.PWD)),
+            };
+
+            Task.WaitAll(backgroundTasks);
+
+            
+
+        }
+
+
+        private static void CheckHouse(string buildingCode,string user,string pwd)
+        {
+
+            if(!BuildingName.ContainsKey(buildingCode))
+            {
+                Console.WriteLine("楼层code不存在：{0}",buildingCode);
+                return;
+            }
 
             string url = @"/online/roomResource.xp?action=register&t=" + DateTime.Now.CurrentTimeMillis().ToString();
 
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri(@"http://117.71.57.99:9080");
-
+                Console.WriteLine("正在查找{0}楼层房源信息....", BuildingName[buildingCode]);
                 while (true)
                 {
                     try
@@ -45,7 +75,7 @@ namespace Tickets
                         param.Add(new KeyValuePair<string, string>("geetest_validate", validate));
                         param.Add(new KeyValuePair<string, string>("geetest_seccode", seccode));
                         param.Add(new KeyValuePair<string, string>("code", "01"));
-                        param.Add(new KeyValuePair<string, string>("buildingCode", userConfig.BuildCode));
+                        param.Add(new KeyValuePair<string, string>("buildingCode", buildingCode));
                         Task<string> reString = client.PostAsync(@"/online/roomResource.xp?action=vaildate", new FormUrlEncodedContent(param)).Result.Content.ReadAsStringAsync();
                         reString.Wait();
                         JObject jObject = JObject.Parse(reString.Result);
@@ -67,14 +97,15 @@ namespace Tickets
                         var availabeRooms = query.ToList();
                         if (availabeRooms.Count != 0)
                         {
-
+                            Console.WriteLine("找到房源啦!!");
                             foreach (var r in availabeRooms)
                             {
+                                Console.WriteLine("开始尝试预定房间{0},房间大小{1},房间朝向{2},房间类型{3},房间价格{4}",r.RoomCode,r.RoomArea,r.RoomDirection,r.RoomType,r.Price);
                                 HttpResponseMessage message;
                                 var loginUrl = "/online/gzflogin.jtml?action=login";
                                 List<KeyValuePair<string, string>> loginParams = new List<KeyValuePair<string, string>>();
-                                loginParams.Add(new KeyValuePair<string, string>("accountCode", userConfig.Account));
-                                loginParams.Add(new KeyValuePair<string, string>("accountPass", userConfig.PWD));
+                                loginParams.Add(new KeyValuePair<string, string>("accountCode", user));
+                                loginParams.Add(new KeyValuePair<string, string>("accountPass", pwd));
                                 loginParams.Add(new KeyValuePair<string, string>("wrong", ""));
                                 message = client.PostAsync(loginUrl, new FormUrlEncodedContent(loginParams)).Result;
                                 // HttpResponseMessage message = client.GetAsync("/online/roomConfig.xp?action=getRoomConfig&roomID="+id).Result;
@@ -92,20 +123,15 @@ namespace Tickets
                                 }
                             }
                         }
-
-                        Thread.Sleep(1000);
-
+                        Thread.Sleep(500);
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine("出现异常：{0}", ex.Message);
                     }
-
-
                 }
-
-
             }
+
         }
 
         private static User InitConfig()
