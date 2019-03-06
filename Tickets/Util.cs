@@ -27,7 +27,7 @@ namespace Tickets
         }
 
 
-        private static string UserResponse(int a,string challenge)
+        private static string CaculateChallenge(int a,string challenge)
         {
             char[] challengeChars = challenge.ToCharArray();
             List<int> challengeInts = new List<int>();
@@ -102,9 +102,9 @@ namespace Tickets
             int rand0 = offline_sample[r, 1];
             int rand1 = offline_sample[r, 2];
 
-            string distance_r = UserResponse(distance,challenge);
-            string rand0_r = UserResponse(rand0,challenge);
-            string rand1_r = UserResponse(rand1,challenge);
+            string distance_r = CaculateChallenge(distance,challenge);
+            string rand0_r = CaculateChallenge(rand0,challenge);
+            string rand1_r = CaculateChallenge(rand1,challenge);
 
             string validate = distance_r + "_" + rand0_r + "_" + rand1_r;
 

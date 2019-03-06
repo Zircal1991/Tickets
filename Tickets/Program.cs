@@ -16,7 +16,7 @@ namespace Tickets
     {
         private const string V = "buildingCode";
 
-        private static  Dictionary<string,string> BuildingName = new Dictionary<string, string>()
+        private static Dictionary<string, string> BuildingName = new Dictionary<string, string>()
             {
                 {"0011449816806945psc","1#"},
                 {"0011449816830250MuI","2#"},
@@ -27,33 +27,26 @@ namespace Tickets
         static void Main(string[] args)
         {
             var userConfig = InitConfig();
-
-            var backgroundTasks = new []
+            var backgroundTasks = new[]
             {
                 Task.Run(()=>CheckHouse("0011449816806945psc",userConfig.Account,userConfig.PWD)),
                 Task.Run(()=>CheckHouse("0011449816830250MuI",userConfig.Account,userConfig.PWD)),
                 Task.Run(()=>CheckHouse("0011449816876736sfx",userConfig.Account,userConfig.PWD)),
                 Task.Run(()=>CheckHouse("0011449816949458BXk",userConfig.Account,userConfig.PWD)),
             };
-
             Task.WaitAll(backgroundTasks);
-
-            
-
         }
 
 
-        private static void CheckHouse(string buildingCode,string user,string pwd)
+        private static void CheckHouse(string buildingCode, string user, string pwd)
         {
 
-            if(!BuildingName.ContainsKey(buildingCode))
+            if (!BuildingName.ContainsKey(buildingCode))
             {
-                Console.WriteLine("楼层code不存在：{0}",buildingCode);
+                Console.WriteLine("楼层code不存在：{0}", buildingCode);
                 return;
             }
-
             string url = @"/online/roomResource.xp?action=register&t=" + DateTime.Now.CurrentTimeMillis().ToString();
-
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri(@"http://117.71.57.99:9080");
@@ -100,7 +93,7 @@ namespace Tickets
                             Console.WriteLine("找到房源啦!!");
                             foreach (var r in availabeRooms)
                             {
-                                Console.WriteLine("开始尝试预定房间{0},房间大小{1},房间朝向{2},房间类型{3},房间价格{4},楼号{5},楼层{6}",r.RoomCode,r.RoomArea,r.RoomDirection,r.RoomType,r.Price,BuildingName[buildingCode],r.RoomFloor);
+                                Console.WriteLine("开始尝试预定房间{0},房间大小{1},房间朝向{2},房间类型{3},房间价格{4},楼号{5},楼层{6}", r.RoomCode, r.RoomArea, r.RoomDirection, r.RoomType, r.Price, BuildingName[buildingCode], r.RoomFloor);
                                 HttpResponseMessage message;
                                 var loginUrl = "/online/gzflogin.jtml?action=login";
                                 List<KeyValuePair<string, string>> loginParams = new List<KeyValuePair<string, string>>();
@@ -121,7 +114,7 @@ namespace Tickets
                                 {
                                     SubmitMode mode = new SubmitMode();
                                     mode.Code = "01";
-                                    mode.Name="皖水公寓";
+                                    mode.Name = "皖水公寓";
                                     mode.BuildingCode = buildingCode;
                                     mode.BuildingName = BuildingName[buildingCode];
                                     mode.BuildingFloor = r.RoomFloor;
@@ -129,25 +122,25 @@ namespace Tickets
                                     ss.Add(r.RoomCode);
                                     mode.RoomList = ss;
                                     string rooms = JsonConvert.SerializeObject(mode);
-                                    Console.WriteLine("预定房间信息:{0}",rooms);
+                                    Console.WriteLine("预定房间信息:{0}", rooms);
 
                                     List<KeyValuePair<string, string>> submitPara = new List<KeyValuePair<string, string>>();
-                                    submitPara.Add(new KeyValuePair<string, string>("jsonStr",rooms));
-                                    submitPara.Add(new KeyValuePair<string, string>("geetest_challenge",challenge));
-                                    submitPara.Add(new KeyValuePair<string, string>("geetest_validate",validate));
-                                    submitPara.Add(new KeyValuePair<string, string>("geetest_seccode",seccode));
+                                    submitPara.Add(new KeyValuePair<string, string>("jsonStr", rooms));
+                                    submitPara.Add(new KeyValuePair<string, string>("geetest_challenge", challenge));
+                                    submitPara.Add(new KeyValuePair<string, string>("geetest_validate", validate));
+                                    submitPara.Add(new KeyValuePair<string, string>("geetest_seccode", seccode));
 
-                                    message = client.PostAsync(@"/online/apply.do?action=roomSchedule",new FormUrlEncodedContent(submitPara)).Result;
+                                    message = client.PostAsync(@"/online/apply.do?action=roomSchedule", new FormUrlEncodedContent(submitPara)).Result;
                                     string data = message.Content.ReadAsStringAsync().Result;
-                                        
-                                    if(data.Equals("ok"))
-                                    {
-                                        Console.WriteLine("房间：{0}预定成功,{1}", r.Id,s);
-                                    }else
-                                    {
-                                        Console.WriteLine("房间：{0}失败,{1}", r.Id,s);
-                                    }
 
+                                    if (data.Equals("ok"))
+                                    {
+                                        Console.WriteLine("房间：{0}预定成功,{1}", r.Id, s);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("房间：{0}失败,{1}", r.Id, s);
+                                    }
                                 }
                             }
                         }
